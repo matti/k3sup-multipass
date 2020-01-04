@@ -49,3 +49,47 @@ git clone https://github.com/matti/k3sup-multipass
 cd k3sup-multipass
 ln -s $(pwd)/bin/k3sup-multipass /usr/local/bin
 ```
+
+## usage
+
+```
+USAGE:
+list
+  lists all multipass k3s nodes
+
+create NAME [--cpus=$(nproc) --disk=5G]
+  creates a multipass k3s node
+
+delete NAME
+  deletes a multipass k3s node
+
+kubeconfig NAME
+  returns the path to the kubeconfig. use with: export KUBECONFIG=$(k3sup-multipass kubeconfig NAME)
+
+proxy:enable NAME [--publish=127.0.0.1:80:80 --publish=127.0.0.1:443:443]
+  publishes ports from the node to the host
+
+proxy:disable NAME
+  disables the proxy
+
+proxy:show NAME
+  shows the current proxy if enabled
+
+ip NAME
+  returns the IP address
+
+shell NAME
+  opens shell to the instance
+
+exec NAME [-- command arg1 arg2]
+  execs a command in the instance
+
+kubectl|k NAME <kubectl args>
+  runs kubectl with correct kubeconfig
+
+helm NAME <heml args>
+  runs helm with correct kubeconfig
+
+version|--version
+usage|help
+```
