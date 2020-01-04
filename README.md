@@ -89,7 +89,7 @@ exec NAME [-- command arg1 arg2]
 kubectl|k NAME <kubectl args>
   runs kubectl with correct kubeconfig
 
-helm NAME <heml args>
+helm NAME <helm args>
   runs helm with correct kubeconfig
 
 version|--version
