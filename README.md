@@ -95,3 +95,8 @@ helm NAME <helm args>
 version|--version
 usage|help
 ```
+
+# related
+- https://github.com/matti/k3dolan
+- https://github.com/matti/kindol
+
