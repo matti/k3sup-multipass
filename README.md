@@ -1,6 +1,6 @@
 # k3sup-multipass
 
-[k3sup](https://github.com/alexellis/k3sup) helper, inspired by [this gist](https://gist.github.com/alexellis/85175164331f340d9860675f6af740f8)
+[k3sup](https://github.com/alexellis/k3sup) helper to supercharge [multipass](https://multipass.run/) based k3s instances, inspired by [this gist](https://gist.github.com/alexellis/85175164331f340d9860675f6af740f8)
 
 ## features
 * creates multipass k3s instances with one command *and* transfers the kubeconfig to the host
