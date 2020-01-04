@@ -20,26 +20,48 @@ Download complete.
 k3sup-multipass create done!
 
 export KUBECONFIG=/Users/mpa/.kube/k3s-multipass-test
+```
 
+Let's set the *automagically* fetched kubeconfig
+```
 $ export KUBECONFIG=$(k3sup-multipass kubeconfig test)
+```
 
+And it works!
+```
 $ kubectl get node -o wide
 kubectl get node -o wide
 NAME       STATUS   ROLES    AGE   VERSION         INTERNAL-IP     EXTERNAL-IP   OS-IMAGE             KERNEL-VERSION      CONTAINER-RUNTIME
 k3s-test   Ready    master   44s   v1.16.3-k3s.2   192.168.64.14   <none>        Ubuntu 18.04.3 LTS   4.15.0-72-generic   containerd://1.3.0-k3s.5
+```
 
+Now, the instance IP changes every time (and multipass does not support fixed IP addresses...), so you need to find out the IP every time...
+```
 $ curl 192.168.64.14
 404 page not found
+```
 
+Let's fix this with a small socat based proxy running at good old 127.0.0.1
+```
 $ k3sup-multipass proxy:enable test
 proxy to k3s-test enabled with --publish 127.0.0.1:80:80 --publish 127.0.0.1:443:443
+```
 
+And now our ingress works in localhost (and you can use domains like test.localtest.me)
+
+```
 $ curl localhost
 404 page not found
+```
 
+We can free the port 80 temporarily with:
+```
 $ k3sup-multipass proxy:disable test
 proxy disabled
+```
 
+And as expected, it's no longer accessible in localhost:
+```
 $ curl localhost
 curl: (7) Failed to connect to localhost port 80: Connection refused
 ```
