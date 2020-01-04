@@ -1,5 +1,7 @@
 # k3sup-multipass
 
+[k3sup](https://github.com/alexellis/k3sup) helper, inspired by [this gist](https://gist.github.com/alexellis/85175164331f340d9860675f6af740f8)
+
 ## features
 * creates multipass k3s instances with one command *and* transfers the kubeconfig to the host
 * optionally proxies ingress controller to hosts localhost:80 (multipass does not have stable ip address support)
