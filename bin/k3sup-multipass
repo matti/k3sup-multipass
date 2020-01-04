@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+_err() {
+  >&2 echo "err: $*"
+  exit 1
+}
+
+command="${1:-}"
+clusterCommand=0
+case "$command" in
+  list)
+    multipass list | grep k3s-
+  ;;
+  --version|version)
+    echo "0.1.0"
+  ;;
+  ""|usage|help)
+    echo 'USAGE:
+list
+  lists all multipass k3s nodes
+
+create NAME [--cpus=$(nproc) --disk=5G]
+  creates a multipass k3s node
+
+delete NAME
+  deletes a multipass k3s node
+
+kubeconfig NAME
+  returns the path to the kubeconfig. use with: export KUBECONFIG=$(k3sup-multipass kubeconfig NAME)
+
+proxy:enable NAME [--publish=127.0.0.1:80:80 --publish=127.0.0.1:443:443]
+  publishes ports from the node to the host
+
+proxy:disable NAME
+  disables the proxy
+
+proxy:show NAME
+  shows the current proxy if enabled
+
+ip NAME
+  returns the IP address
+
+shell NAME
+  opens shell to the instance
+
+exec NAME [-- command arg1 arg2]
+  execs a command in the instance
+
+kubectl|k NAME <kubectl args>
+  runs kubectl with correct kubeconfig
+
+helm NAME <heml args>
+  runs helm with correct kubeconfig
+
+version|--version
+usage|help
+'
+  ;;
+  *)
+    clusterCommand=1
+  ;;
+esac
+
+[ "$clusterCommand" = 0 ] && exit 0
+
+name="${2:-}"
+[ "$name" = "" ] && _err "name missing"
+
+KUBECONFIG="$HOME/.kube/k3s-multipass-$name"
+
+case "$command" in
+  create)
+    cpus=$(nproc || sysctl -n hw.logicalcpu)
+    disk=5G
+
+    for arg in "${@:3}"; do
+      case $arg in
+        --cpus=*)
+          cpus=${arg#*=}
+        ;;
+        --disk=*)
+          disk=${arg#*=}
+        ;;
+      esac
+    done
+
+    multipass launch -n "k3s-$name" --cpus "$cpus" --disk "$disk"
+    ip=$($0 ip $name)
+
+    multipass exec "k3s-$name" -- bash -c "curl -sLS https://get.k3sup.dev | sh; /home/ubuntu/k3sup install --local --ip $ip"
+    $0 kubeconfig:transfer $name
+
+    echo """
+
+k3sup-multipass create done!
+
+export KUBECONFIG=\$(k3sup-multipass kubeconfig $name)
+
+"""
+  ;;
+  delete)
+    >/dev/null 2>&1 $0 proxy:disable $name || true
+    multipass delete "k3s-$name"
+    multipass purge
+  ;;
+  ip)
+    multipass exec "k3s-$name" -- bash -c 'hostname -I | cut -f1 -d" " | tr -d "\n"'
+  ;;
+  proxy:enable)
+    >/dev/null 2>&1 $0 proxy:disable "$name"
+
+    serverIp=$($0 ip $name)
+
+    defaultPublish="--publish 127.0.0.1:80:80 --publish 127.0.0.1:443:443"
+    publish=""
+    for arg in "${@:3}"; do
+      case $arg in
+        --publish=*)
+          publish="$publish$arg "
+        ;;
+      esac
+    done
+    [ "$publish" = "" ] && publish="$defaultPublish"
+
+    >/dev/null docker run -d --name "k3smultipassproxy-$name" \
+      $publish \
+      alpine/socat -dd \
+      tcp-listen:80,fork,reuseaddr tcp-connect:$serverIp:80
+
+    echo "proxy to k3s-$name enabled with $publish"
+  ;;
+  proxy:disable)
+    disabled=false
+    >/dev/null 2>&1 docker rm -f "k3smultipassproxy-$name" && disabled=true
+
+    if [ "$disabled" = true ]; then
+      echo "proxy disabled"
+    else
+      echo "proxy is not running"
+    fi
+  ;;
+  proxy:show)
+    docker ps -f "name=k3smultipassproxy-$name"
+  ;;
+  shell)
+    multipass shell "k3s-$name"
+  ;;
+  exec)
+    multipass exec "k3s-$name" -- bash -c "${*:3}"
+  ;;
+  kubectl|k)
+    kubectl "${@:3}"
+  ;;
+  helm)
+    helm "${@:3}"
+  ;;
+  kubeconfig)
+    echo $KUBECONFIG
+  ;;
+  kubeconfig:transfer)
+    multipass transfer "k3s-$name:kubeconfig" "$KUBECONFIG"
+  ;;
+  *)
+    $0 usage
+    exit
+  ;;
+esac

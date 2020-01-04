@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+version=$(bin/k3sup-multipass version)
+git tag "v$version"
+git push --tags

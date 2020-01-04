@@ -1,0 +1,13 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: nginx
+spec:
+  rules:
+  - host: nginx.localtest.me
+    http:
+      paths:
+        - path: /
+          backend:
+            serviceName: nginx
+            servicePort: 80
