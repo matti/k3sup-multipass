@@ -41,13 +41,13 @@ $ curl 192.168.64.14
 404 page not found
 ```
 
-Let's fix this with a small socat based proxy running at good old 127.0.0.1
+Let's fix this with a small socat based proxy running at the good old 127.0.0.1
 ```
 $ k3sup-multipass proxy:enable test
 proxy to k3s-test enabled with --publish 127.0.0.1:80:80 --publish 127.0.0.1:443:443
 ```
 
-And now our ingress works in localhost (and you can use domains like test.localtest.me)
+And now our ingress works in the localhost (and you can use domains like test.localtest.me in your ingress objects)
 
 ```
 $ curl localhost
